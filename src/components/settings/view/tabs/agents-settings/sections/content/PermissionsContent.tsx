@@ -563,6 +563,32 @@ function CodexPermissions({ permissionMode, onPermissionModeChange }: Omit<Codex
           </label>
         </div>
 
+        <div
+          className={`border rounded-lg p-4 cursor-pointer transition-all ${permissionMode === 'plan'
+            ? 'bg-blue-50 dark:bg-blue-900/20 border-blue-400 dark:border-blue-600'
+            : 'bg-gray-50 dark:bg-gray-900/50 border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600'
+            }`}
+          onClick={() => onPermissionModeChange('plan')}
+        >
+          <label className="flex items-start gap-3 cursor-pointer">
+            <input
+              type="radio"
+              name="codexPermissionMode"
+              checked={permissionMode === 'plan'}
+              onChange={() => onPermissionModeChange('plan')}
+              className="mt-1 w-4 h-4 text-blue-600"
+            />
+            <div>
+              <div className="font-medium text-blue-900 dark:text-blue-100">
+                {t('permissions.codex.modes.plan.title')}
+              </div>
+              <div className="text-sm text-blue-700 dark:text-blue-300">
+                {t('permissions.codex.modes.plan.description')}
+              </div>
+            </div>
+          </label>
+        </div>
+
         <details className="text-sm">
           <summary className="cursor-pointer text-muted-foreground hover:text-foreground">
             {t('permissions.codex.technicalDetails')}
@@ -571,6 +597,7 @@ function CodexPermissions({ permissionMode, onPermissionModeChange }: Omit<Codex
             <p><strong>{t('permissions.codex.modes.default.title')}:</strong> {t('permissions.codex.technicalInfo.default')}</p>
             <p><strong>{t('permissions.codex.modes.acceptEdits.title')}:</strong> {t('permissions.codex.technicalInfo.acceptEdits')}</p>
             <p><strong>{t('permissions.codex.modes.bypassPermissions.title')}:</strong> {t('permissions.codex.technicalInfo.bypassPermissions')}</p>
+            <p><strong>{t('permissions.codex.modes.plan.title')}:</strong> {t('permissions.codex.technicalInfo.plan')}</p>
             <p className="text-xs opacity-75">{t('permissions.codex.technicalInfo.overrideNote')}</p>
           </div>
         </details>

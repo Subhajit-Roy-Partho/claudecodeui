@@ -67,6 +67,7 @@ function ChatInterface({
     geminiModel,
     setGeminiModel,
     permissionMode,
+    setPermissionMode,
     pendingPermissionRequests,
     setPendingPermissionRequests,
     cyclePermissionMode,
@@ -130,6 +131,8 @@ function ChatInterface({
     isTextareaExpanded,
     thinkingMode,
     setThinkingMode,
+    codexThinkingEffort,
+    setCodexThinkingEffort,
     slashCommandsCount,
     filteredCommands,
     frequentCommands,
@@ -173,6 +176,7 @@ function ChatInterface({
     provider,
     permissionMode,
     cyclePermissionMode,
+    setPermissionMode,
     cursorModel,
     claudeModel,
     codexModel,
@@ -333,6 +337,8 @@ function ChatInterface({
           onModeSwitch={cyclePermissionMode}
           thinkingMode={thinkingMode}
           setThinkingMode={setThinkingMode}
+          codexThinkingEffort={codexThinkingEffort}
+          setCodexThinkingEffort={setCodexThinkingEffort}
           tokenBudget={tokenBudget}
           slashCommandsCount={slashCommandsCount}
           onToggleCommandMenu={handleToggleCommandMenu}

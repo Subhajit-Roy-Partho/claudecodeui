@@ -94,9 +94,19 @@
       "default": "Only trusted commands (ls, cat, grep, git status, etc.) run automatically. Other commands are skipped. Can write to workspace.",
       "acceptEdits": "All commands run automatically within the workspace. Full auto mode with sandboxed execution.",
       "bypassPermissions": "Full system access with no restrictions. All commands run automatically with full disk and network access. Use with caution.",
-      "plan": "Planning mode - no commands are executed"
+      "plan": "Planning-focused mode using Codex default execution policy."
     },
     "technicalDetails": "Technical details"
+  },
+  "codexThinkingEffort": {
+    "title": "Codex thinking effort",
+    "label": "Thinking effort",
+    "options": {
+      "low": "Low",
+      "medium": "Medium",
+      "high": "High",
+      "xhigh": "XHigh"
+    }
   },
   "gemini": {
     "permissionMode": "Gemini Permission Mode",

@@ -126,6 +126,12 @@ const builtInCommands = [
     description: 'Rewind the conversation to a previous state',
     namespace: 'builtin',
     metadata: { type: 'builtin' }
+  },
+  {
+    name: '/plan',
+    description: 'Switch to plan permission mode',
+    namespace: 'builtin',
+    metadata: { type: 'builtin' }
   }
 ];
 
@@ -394,6 +400,17 @@ Custom commands can be created in:
       data: {
         steps,
         message: `Rewinding conversation by ${steps} step${steps > 1 ? 's' : ''}...`
+      }
+    };
+  },
+
+  '/plan': async (args, context) => {
+    return {
+      type: 'builtin',
+      action: 'plan',
+      data: {
+        provider: context?.provider || 'claude',
+        message: 'Plan mode enabled'
       }
     };
   }

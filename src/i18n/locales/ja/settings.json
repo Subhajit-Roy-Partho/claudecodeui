@@ -367,6 +367,10 @@
         "bypassPermissions": {
           "title": "権限をバイパス",
           "description": "制限なしの完全なシステムアクセス。すべてのコマンドがディスクとネットワークへの完全なアクセスで自動実行されます。注意して使用してください。"
+        },
+        "plan": {
+          "title": "プラン",
+          "description": "計画重視モード。サンドボックスと承認ポリシーはデフォルトと同じです。"
         }
       },
       "technicalDetails": "技術的な詳細",
@@ -374,6 +378,7 @@
         "default": "sandboxMode=workspace-write, approvalPolicy=untrusted。信頼されたコマンド: cat, cd, grep, head, ls, pwd, tail, git status/log/diff/show, find（-execなし）など。",
         "acceptEdits": "sandboxMode=workspace-write, approvalPolicy=never。すべてのコマンドがプロジェクトディレクトリ内で自動実行。",
         "bypassPermissions": "sandboxMode=danger-full-access, approvalPolicy=never。完全なシステムアクセス。信頼された環境でのみ使用してください。",
+        "plan": "実行時設定はデフォルトと同じです: sandboxMode=workspace-write, approvalPolicy=untrusted。",
         "overrideNote": "チャットインターフェースのモードボタンを使用してセッションごとに上書きできます。"
       }
     },

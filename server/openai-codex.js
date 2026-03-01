@@ -17,6 +17,7 @@ import { Codex } from '@openai/codex-sdk';
 
 // Track active sessions
 const activeCodexSessions = new Map();
+const VALID_REASONING_EFFORTS = new Set(['low', 'medium', 'high', 'xhigh']);
 
 /**
  * Transform Codex SDK event to WebSocket message format
@@ -158,7 +159,7 @@ function transformCodexEvent(event) {
 
 /**
  * Map permission mode to Codex SDK options
- * @param {string} permissionMode - 'default', 'acceptEdits', or 'bypassPermissions'
+ * @param {string} permissionMode - 'default', 'acceptEdits', 'bypassPermissions', or 'plan'
  * @returns {object} - { sandboxMode, approvalPolicy }
  */
 function mapPermissionModeToCodexOptions(permissionMode) {
@@ -173,6 +174,7 @@ function mapPermissionModeToCodexOptions(permissionMode) {
         sandboxMode: 'danger-full-access',
         approvalPolicy: 'never'
       };
+    case 'plan':
     case 'default':
     default:
       return {
@@ -185,7 +187,7 @@ function mapPermissionModeToCodexOptions(permissionMode) {
 /**
  * Execute a Codex query with streaming
  * @param {string} command - The prompt to send
- * @param {object} options - Options including cwd, sessionId, model, permissionMode
+ * @param {object} options - Options including cwd, sessionId, model, permissionMode, effort
  * @param {WebSocket|object} ws - WebSocket connection or response writer
  */
 export async function queryCodex(command, options = {}, ws) {
@@ -194,11 +196,13 @@ export async function queryCodex(command, options = {}, ws) {
     cwd,
     projectPath,
     model,
-    permissionMode = 'default'
+    permissionMode = 'default',
+    effort
   } = options;
 
   const workingDirectory = cwd || projectPath || process.cwd();
   const { sandboxMode, approvalPolicy } = mapPermissionModeToCodexOptions(permissionMode);
+  const normalizedEffort = VALID_REASONING_EFFORTS.has(effort) ? effort : undefined;
 
   let codex;
   let thread;
@@ -245,9 +249,13 @@ export async function queryCodex(command, options = {}, ws) {
     });
 
     // Execute with streaming
-    const streamedTurn = await thread.runStreamed(command, {
+    const runOptions = {
       signal: abortController.signal
-    });
+    };
+    if (normalizedEffort) {
+      runOptions.effort = normalizedEffort;
+    }
+    const streamedTurn = await thread.runStreamed(command, runOptions);
 
     for await (const event of streamedTurn.events) {
       // Check if session was aborted

@@ -94,9 +94,19 @@
       "default": "신뢰할 수 있는 명령어(ls, cat, grep, git status 등)만 자동 실행됩니다. 다른 명령어는 건너뜁니다. 워크스페이스에 쓰기 가능.",
       "acceptEdits": "워크스페이스 내에서 모든 명령어가 자동 실행됩니다. 샌드박스 내 완전 자동 모드.",
       "bypassPermissions": "제한 없는 전체 시스템 접근. 모든 명령어가 전체 디스크 및 네트워크 접근 권한으로 자동 실행됩니다. 주의해서 사용하세요.",
-      "plan": "계획 모드 - 명령어가 실행되지 않습니다"
+      "plan": "계획 중심 모드(실행 정책은 기본 모드와 동일)"
     },
     "technicalDetails": "기술 상세"
+  },
+  "codexThinkingEffort": {
+    "title": "Codex 사고 강도",
+    "label": "사고 강도",
+    "options": {
+      "low": "낮음",
+      "medium": "보통",
+      "high": "높음",
+      "xhigh": "매우 높음"
+    }
   },
   "input": {
     "placeholder": "/를 입력하여 명령어, @를 입력하여 파일, 또는 {{provider}}에게 무엇이든 물어보세요...",

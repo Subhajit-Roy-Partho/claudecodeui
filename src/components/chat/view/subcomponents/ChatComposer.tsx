@@ -17,7 +17,7 @@ import type {
   SetStateAction,
   TouchEvent,
 } from 'react';
-import type { PendingPermissionRequest, PermissionMode, Provider } from '../../types/types';
+import type { CodexThinkingEffort, PendingPermissionRequest, PermissionMode, Provider } from '../../types/types';
 
 interface MentionableFile {
   name: string;
@@ -49,6 +49,8 @@ interface ChatComposerProps {
   onModeSwitch: () => void;
   thinkingMode: string;
   setThinkingMode: Dispatch<SetStateAction<string>>;
+  codexThinkingEffort: CodexThinkingEffort;
+  setCodexThinkingEffort: Dispatch<SetStateAction<CodexThinkingEffort>>;
   tokenBudget: { used?: number; total?: number } | null;
   slashCommandsCount: number;
   onToggleCommandMenu: () => void;
@@ -106,6 +108,8 @@ export default function ChatComposer({
   onModeSwitch,
   thinkingMode,
   setThinkingMode,
+  codexThinkingEffort,
+  setCodexThinkingEffort,
   tokenBudget,
   slashCommandsCount,
   onToggleCommandMenu,
@@ -194,6 +198,8 @@ export default function ChatComposer({
           provider={provider}
           thinkingMode={thinkingMode}
           setThinkingMode={setThinkingMode}
+          codexThinkingEffort={codexThinkingEffort}
+          setCodexThinkingEffort={setCodexThinkingEffort}
           tokenBudget={tokenBudget}
           slashCommandsCount={slashCommandsCount}
           onToggleCommandMenu={onToggleCommandMenu}

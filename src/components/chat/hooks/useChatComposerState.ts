@@ -17,6 +17,7 @@ import { thinkingModes } from '../constants/thinkingModes';
 import { grantClaudeToolPermission } from '../utils/chatPermissions';
 import { safeLocalStorage } from '../utils/chatStorage';
 import type {
+  CodexThinkingEffort,
   ChatMessage,
   PendingPermissionRequest,
   PermissionMode,
@@ -38,6 +39,7 @@ interface UseChatComposerStateArgs {
   provider: SessionProvider;
   permissionMode: PermissionMode | string;
   cyclePermissionMode: () => void;
+  setPermissionMode: Dispatch<SetStateAction<PermissionMode>>;
   cursorModel: string;
   claudeModel: string;
   codexModel: string;
@@ -84,6 +86,68 @@ const createFakeSubmitEvent = () => {
 const isTemporarySessionId = (sessionId: string | null | undefined) =>
   Boolean(sessionId && sessionId.startsWith('new-session-'));
 
+const CODEX_THINKING_EFFORT_VALUES: CodexThinkingEffort[] = ['low', 'medium', 'high', 'xhigh'];
+
+const toCodexThinkingEffort = (value: string | null | undefined): CodexThinkingEffort => {
+  if (value && CODEX_THINKING_EFFORT_VALUES.includes(value as CodexThinkingEffort)) {
+    return value as CodexThinkingEffort;
+  }
+
+  return 'medium';
+};
+
+type PendingCodexPlanRequest = {
+  originalRequest: string;
+  createdAt: number;
+};
+
+const CODEX_PLAN_APPROVAL_TTL_MS = 30 * 60 * 1000;
+
+const toDecisionInput = (value: string) => value.trim().toLowerCase().replace(/[.!?]+$/g, '');
+
+const isCodexPlanApproval = (value: string) => {
+  const normalized = toDecisionInput(value);
+  const approvals = [
+    'yes',
+    'y',
+    'go ahead',
+    'proceed',
+    'implement',
+    'implement it',
+    'please implement',
+    'do it',
+    'ship it',
+    'start implementation',
+  ];
+  return approvals.some((approval) => normalized === approval || normalized.startsWith(`${approval} `));
+};
+
+const buildCodexPlanPrompt = (userRequest: string) => {
+  return [
+    'Plan mode is active.',
+    'You may inspect code and run read-only commands to gather context, but do not edit files and do not run mutating commands.',
+    'Create a detailed implementation plan for the user request below.',
+    'Your response must include:',
+    '1. Objective and constraints',
+    '2. Current-state findings from the codebase',
+    '3. Step-by-step implementation plan',
+    '4. Risks, edge cases, and assumptions',
+    '5. Validation strategy (tests/checks to run)',
+    '6. Rollback strategy',
+    'After the plan, ask exactly: "Do you want me to implement this plan now?"',
+    `User request:\n${userRequest}`,
+  ].join('\n\n');
+};
+
+const buildCodexImplementationPrompt = (originalRequest: string, approvalMessage: string) => {
+  return [
+    'The user approved your plan. Implement it now end-to-end.',
+    `Original request:\n${originalRequest}`,
+    `User approval:\n${approvalMessage}`,
+    'Execute the implementation directly, run relevant checks, and summarize what changed plus any remaining follow-ups.',
+  ].join('\n\n');
+};
+
 export function useChatComposerState({
   selectedProject,
   selectedSession,
@@ -91,6 +155,7 @@ export function useChatComposerState({
   provider,
   permissionMode,
   cyclePermissionMode,
+  setPermissionMode,
   cursorModel,
   claudeModel,
   codexModel,
@@ -126,6 +191,9 @@ export function useChatComposerState({
   const [imageErrors, setImageErrors] = useState<Map<string, string>>(new Map());
   const [isTextareaExpanded, setIsTextareaExpanded] = useState(false);
   const [thinkingMode, setThinkingMode] = useState('none');
+  const [codexThinkingEffort, setCodexThinkingEffort] = useState<CodexThinkingEffort>(() =>
+    toCodexThinkingEffort(safeLocalStorage.getItem('codex-thinking-effort')),
+  );
 
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const inputHighlightRef = useRef<HTMLDivElement>(null);
@@ -133,6 +201,7 @@ export function useChatComposerState({
     ((event: FormEvent<HTMLFormElement> | MouseEvent | TouchEvent | KeyboardEvent<HTMLTextAreaElement>) => Promise<void>) | null
   >(null);
   const inputValueRef = useRef(input);
+  const pendingCodexPlanRequestRef = useRef<PendingCodexPlanRequest | null>(null);
 
   const handleBuiltInCommand = useCallback(
     (result: CommandExecutionResult) => {
@@ -235,11 +304,26 @@ export function useChatComposerState({
           }
           break;
 
+        case 'plan':
+          setPermissionMode('plan');
+          if (selectedSession?.id) {
+            safeLocalStorage.setItem(`permissionMode-${selectedSession.id}`, 'plan');
+          }
+          setChatMessages((previous) => [
+            ...previous,
+            {
+              type: 'assistant',
+              content: data?.message || '📋 Plan mode enabled',
+              timestamp: Date.now(),
+            },
+          ]);
+          break;
+
         default:
           console.warn('Unknown built-in command action:', action);
       }
     },
-    [onFileOpen, onShowSettings, setChatMessages, setSessionMessages],
+    [onFileOpen, onShowSettings, selectedSession?.id, setChatMessages, setPermissionMode, setSessionMessages],
   );
 
   const handleCustomCommand = useCallback(async (result: CommandExecutionResult) => {
@@ -503,9 +587,33 @@ export function useChatComposerState({
       }
 
       let messageContent = currentInput;
-      const selectedThinkingMode = thinkingModes.find((mode: { id: string; prefix?: string }) => mode.id === thinkingMode);
-      if (selectedThinkingMode && selectedThinkingMode.prefix) {
-        messageContent = `${selectedThinkingMode.prefix}: ${currentInput}`;
+      let effectivePermissionMode = permissionMode;
+      if (provider === 'claude') {
+        const selectedThinkingMode = thinkingModes.find((mode: { id: string; prefix?: string }) => mode.id === thinkingMode);
+        if (selectedThinkingMode && selectedThinkingMode.prefix) {
+          messageContent = `${selectedThinkingMode.prefix}: ${currentInput}`;
+        }
+      } else if (provider === 'codex' && permissionMode === 'plan') {
+        const pendingPlan = pendingCodexPlanRequestRef.current;
+        const isPendingPlanValid = Boolean(
+          pendingPlan && Date.now() - pendingPlan.createdAt <= CODEX_PLAN_APPROVAL_TTL_MS,
+        );
+
+        if (pendingPlan && isPendingPlanValid && isCodexPlanApproval(trimmedInput)) {
+          messageContent = buildCodexImplementationPrompt(pendingPlan.originalRequest, currentInput);
+          pendingCodexPlanRequestRef.current = null;
+          effectivePermissionMode = 'default';
+          setPermissionMode('default');
+          if (selectedSession?.id) {
+            safeLocalStorage.setItem(`permissionMode-${selectedSession.id}`, 'default');
+          }
+        } else {
+          pendingCodexPlanRequestRef.current = {
+            originalRequest: currentInput,
+            createdAt: Date.now(),
+          };
+          messageContent = buildCodexPlanPrompt(currentInput);
+        }
       }
 
       let uploadedImages: unknown[] = [];
@@ -632,7 +740,8 @@ export function useChatComposerState({
             sessionId: effectiveSessionId,
             resume: Boolean(effectiveSessionId),
             model: codexModel,
-            permissionMode: permissionMode === 'plan' ? 'default' : permissionMode,
+            permissionMode: effectivePermissionMode,
+            effort: codexThinkingEffort,
           },
         });
       } else if (provider === 'gemini') {
@@ -686,6 +795,7 @@ export function useChatComposerState({
       attachedImages,
       claudeModel,
       codexModel,
+      codexThinkingEffort,
       currentSessionId,
       cursorModel,
       executeCommand,
@@ -701,6 +811,7 @@ export function useChatComposerState({
       selectedProject,
       selectedSession?.id,
       sendMessage,
+      setPermissionMode,
       setCanAbortSession,
       setChatMessages,
       setClaudeStatus,
@@ -741,6 +852,16 @@ export function useChatComposerState({
       safeLocalStorage.removeItem(`draft_input_${selectedProject.name}`);
     }
   }, [input, selectedProject]);
+
+  useEffect(() => {
+    safeLocalStorage.setItem('codex-thinking-effort', codexThinkingEffort);
+  }, [codexThinkingEffort]);
+
+  useEffect(() => {
+    if (provider !== 'codex' || permissionMode !== 'plan') {
+      pendingCodexPlanRequestRef.current = null;
+    }
+  }, [permissionMode, provider]);
 
   useEffect(() => {
     if (!textareaRef.current) {
@@ -974,6 +1095,8 @@ export function useChatComposerState({
     isTextareaExpanded,
     thinkingMode,
     setThinkingMode,
+    codexThinkingEffort,
+    setCodexThinkingEffort,
     slashCommandsCount,
     filteredCommands,
     frequentCommands,

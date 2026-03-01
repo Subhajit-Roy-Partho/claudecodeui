@@ -3,6 +3,7 @@ import type { Project, ProjectSession, SessionProvider } from '../../../types/ap
 export type Provider = SessionProvider;
 
 export type PermissionMode = 'default' | 'acceptEdits' | 'bypassPermissions' | 'plan';
+export type CodexThinkingEffort = 'low' | 'medium' | 'high' | 'xhigh';
 
 export interface ChatImage {
   data: string;

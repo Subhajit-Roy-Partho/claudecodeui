@@ -1,7 +1,9 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import ThinkingModeSelector from './ThinkingModeSelector';
+import CodexThinkingEffortSelector from './CodexThinkingEffortSelector';
 import TokenUsagePie from './TokenUsagePie';
+import type { CodexThinkingEffort } from '../../types/types';
 import type { PermissionMode, Provider } from '../../types/types';
 
 interface ChatInputControlsProps {
@@ -10,6 +12,8 @@ interface ChatInputControlsProps {
   provider: Provider | string;
   thinkingMode: string;
   setThinkingMode: React.Dispatch<React.SetStateAction<string>>;
+  codexThinkingEffort: CodexThinkingEffort;
+  setCodexThinkingEffort: React.Dispatch<React.SetStateAction<CodexThinkingEffort>>;
   tokenBudget: { used?: number; total?: number } | null;
   slashCommandsCount: number;
   onToggleCommandMenu: () => void;
@@ -26,6 +30,8 @@ export default function ChatInputControls({
   provider,
   thinkingMode,
   setThinkingMode,
+  codexThinkingEffort,
+  setCodexThinkingEffort,
   tokenBudget,
   slashCommandsCount,
   onToggleCommandMenu,
@@ -78,7 +84,17 @@ export default function ChatInputControls({
         <ThinkingModeSelector selectedMode={thinkingMode} onModeChange={setThinkingMode} onClose={() => {}} className="" />
       )}
 
-      <TokenUsagePie used={tokenBudget?.used || 0} total={tokenBudget?.total || parseInt(import.meta.env.VITE_CONTEXT_WINDOW) || 160000} />
+      {provider === 'codex' && (
+        <CodexThinkingEffortSelector
+          selectedEffort={codexThinkingEffort}
+          onEffortChange={setCodexThinkingEffort}
+        />
+      )}
+
+      <TokenUsagePie
+        used={tokenBudget?.used || 0}
+        total={tokenBudget?.total || parseInt(import.meta.env.VITE_CONTEXT_WINDOW) || 160000}
+      />
 
       <button
         type="button"

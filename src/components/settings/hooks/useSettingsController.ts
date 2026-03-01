@@ -125,7 +125,7 @@ const parseJson = <T>(value: string | null, fallback: T): T => {
 };
 
 const toCodexPermissionMode = (value: unknown): CodexPermissionMode => {
-  if (value === 'acceptEdits' || value === 'bypassPermissions') {
+  if (value === 'acceptEdits' || value === 'bypassPermissions' || value === 'plan') {
     return value;
   }
 

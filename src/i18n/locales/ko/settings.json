@@ -367,6 +367,10 @@
         "bypassPermissions": {
           "title": "권한 우회",
           "description": "제한 없는 전체 시스템 접근. 모든 명령어가 전체 디스크 및 네트워크 접근 권한으로 자동 실행됩니다. 주의해서 사용하세요."
+        },
+        "plan": {
+          "title": "계획",
+          "description": "계획 중심 모드입니다. 샌드박스와 승인 정책은 기본 모드와 동일합니다."
         }
       },
       "technicalDetails": "기술 상세",
@@ -374,6 +378,7 @@
         "default": "sandboxMode=workspace-write, approvalPolicy=untrusted. 신뢰할 수 있는 명령어: cat, cd, grep, head, ls, pwd, tail, git status/log/diff/show, find(-exec 제외) 등.",
         "acceptEdits": "sandboxMode=workspace-write, approvalPolicy=never. 프로젝트 디렉토리 내에서 모든 명령어 자동 실행.",
         "bypassPermissions": "sandboxMode=danger-full-access, approvalPolicy=never. 전체 시스템 접근, 신뢰할 수 있는 환경에서만 사용하세요.",
+        "plan": "실행 설정은 기본 모드와 동일합니다: sandboxMode=workspace-write, approvalPolicy=untrusted.",
         "overrideNote": "채팅 인터페이스의 모드 버튼을 사용하여 세션별로 재정의할 수 있습니다."
       }
     },

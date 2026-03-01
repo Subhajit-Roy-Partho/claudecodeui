@@ -84,10 +84,7 @@ export function useChatProviderState({ selectedSession }: UseChatProviderStateAr
   }, [provider]);
 
   const cyclePermissionMode = useCallback(() => {
-    const modes: PermissionMode[] =
-      provider === 'codex'
-        ? ['default', 'acceptEdits', 'bypassPermissions']
-        : ['default', 'acceptEdits', 'bypassPermissions', 'plan'];
+    const modes: PermissionMode[] = ['default', 'acceptEdits', 'bypassPermissions', 'plan'];
 
     const currentIndex = modes.indexOf(permissionMode);
     const nextIndex = (currentIndex + 1) % modes.length;
@@ -97,7 +94,7 @@ export function useChatProviderState({ selectedSession }: UseChatProviderStateAr
     if (selectedSession?.id) {
       localStorage.setItem(`permissionMode-${selectedSession.id}`, nextMode);
     }
-  }, [permissionMode, provider, selectedSession?.id]);
+  }, [permissionMode, selectedSession?.id]);
 
   return {
     provider,
